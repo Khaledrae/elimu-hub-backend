@@ -7,6 +7,8 @@ use App\Http\Requests\StudentStoreRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Services\StudentService;
+use App\Services\TeacherService;
+use App\Http\Requests\TeacherStoreRequest;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,10 +16,12 @@ use Illuminate\Support\Facades\Validator;
 class AuthController extends Controller
 {
     //
-     protected $studentService;
+    protected $teacherService;
+    protected $studentService;
 
-    public function __construct(StudentService $studentService)
+    public function __construct(StudentService $studentService, TeacherService $teacherService)
     {
+        $this->teacherService = $teacherService;
         $this->studentService = $studentService;
     }
 
@@ -42,7 +46,7 @@ class AuthController extends Controller
         if ($isStudent) {
             $studentRequest = new StudentStoreRequest();
             $studentRequest->merge($request->all());
-/*
+            /*
             $studentValidator = Validator::make(
                 $studentRequest->all(),
                 $studentRequest->rules()
@@ -54,8 +58,21 @@ class AuthController extends Controller
 */
             // Pass all data to the service
             $user = $this->studentService->registerStudent($request->all());
-        } 
-        else {
+        } elseif ($role === 'teacher') {
+            $teacherRequest = new TeacherStoreRequest();
+            $teacherRequest->merge($request->all());
+
+            $teacherValidator = Validator::make(
+                $teacherRequest->all(),
+                $teacherRequest->rules()
+            );
+
+            if ($teacherValidator->fails()) {
+                return response()->json($teacherValidator->errors(), 422);
+            }
+
+            $user = $this->teacherService->registerTeacher($request->all());
+        } else {
             // ✅ Default user (teacher/admin)
             $data = $baseValidator->validated();
             $data['password'] = bcrypt($data['password']);
