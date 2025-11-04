@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminStoreRequest;
 use App\Http\Requests\StudentStoreRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Services\StudentService;
 use App\Services\TeacherService;
 use App\Http\Requests\TeacherStoreRequest;
+use App\Http\Resources\UserResource;
+use App\Services\AdminService;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -16,11 +19,13 @@ use Illuminate\Support\Facades\Validator;
 class AuthController extends Controller
 {
     //
+    protected $adminService;
     protected $teacherService;
     protected $studentService;
 
-    public function __construct(StudentService $studentService, TeacherService $teacherService)
+    public function __construct(StudentService $studentService, TeacherService $teacherService, AdminService $adminService)
     {
+        $this->adminService = $adminService;
         $this->teacherService = $teacherService;
         $this->studentService = $studentService;
     }
@@ -72,6 +77,20 @@ class AuthController extends Controller
             }
 
             $user = $this->teacherService->registerTeacher($request->all());
+        } elseif ($role === 'admin') {
+            $adminRequest = new AdminStoreRequest();
+            $adminRequest->merge($request->all());
+
+            $adminValidator = Validator::make(
+                $adminRequest->all(),
+                $adminRequest->rules()
+            );
+
+            if ($adminValidator->fails()) {
+                return response()->json($adminValidator->errors(), 422);
+            }
+
+            $user = $this->adminService->registerAdmin($request->all());
         } else {
             // ✅ Default user (teacher/admin)
             $data = $baseValidator->validated();
@@ -85,7 +104,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => new UserResource($user->load(['student', 'teacher'])),
+            'user' => new UserResource($user->load(['student', 'teacher', 'admin'])),
         ]);
     }
 
@@ -102,7 +121,8 @@ class AuthController extends Controller
 
     public function me()
     {
-        return response()->json(auth()->user());
+        $user = auth()->user();
+        return response()->json(new UserResource($user->load(['student', 'teacher', 'admin'])));
     }
 
     public function logout()

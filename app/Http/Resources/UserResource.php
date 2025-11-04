@@ -43,7 +43,18 @@ class UserResource extends JsonResource
                     ];
                 });
                 break;
-
+            case 'admin':
+                $data['admin_profile'] = $this->whenLoaded('admin', function () {
+                    return [
+                        'id' => $this->admin->id,
+                        'admin_level' => $this->admin->admin_level,
+                        'school_name' => $this->admin->school_name,
+                        'status' => $this->admin->status,
+                        'created_at' => $this->admin->created_at,
+                        'updated_at' => $this->admin->updated_at,
+                    ];
+                });
+                break;
             default:
                 // Admin or generic user
                 $data['profile'] = null;

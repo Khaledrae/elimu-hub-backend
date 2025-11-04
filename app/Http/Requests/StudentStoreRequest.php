@@ -19,7 +19,7 @@ class StudentStoreRequest extends FormRequest
     {
         return [
             //'user_id' => 'required|exists:users,id',
-            'admission_number' => 'nullable|string|max:50',
+            'admission_number' => 'nullable|string|unique:students',
             'grade_level' => 'nullable|string|max:50',
             'school_name' => 'nullable|string|max:255',
             'dob' => 'nullable|date',

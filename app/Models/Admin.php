@@ -5,18 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Student extends Model
+class Admin extends Model
 {
-    //
     use HasFactory;
+
     protected $fillable = [
         'user_id',
-        'admission_number',
-        'grade_level',
+        'admin_level',
         'school_name',
-        'dob',
-        'gender',
-        'guardian_id',
         'status',
     ];
 
@@ -24,13 +20,8 @@ class Student extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    public function guardian()
+    public function school()
     {
-        return $this->belongsTo(User::class, 'guardian_id');
-    }
-    public function class()
-    {
-        return $this->belongsTo(ClassModel::class, 'grade_level');
+        return $this->belongsTo(School::class);
     }
 }
