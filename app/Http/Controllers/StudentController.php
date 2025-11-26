@@ -8,28 +8,52 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
-    //
-    public function __construct()
-    {
-        // JWT auth guard
-        $this->middleware('auth:api');
-    }
-
-    /**
-     * Display a listing of the students.
+   
+     /**
+     * Get all students with filters
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Only admins or teachers can access
-        $user = auth('api')->user();
-        if (!in_array($user->role, ['admin', 'teacher'])) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        $query = Student::with(['user', 'guardian', 'class']);
+
+        // Filter by school
+        if ($request->has('school_name')) {
+            $query->where('school_name', $request->school_name);
         }
 
-        $students = Student::with(['user', 'guardian'])->latest()->get();
+        // Filter by grade level
+        if ($request->has('grade_level')) {
+            $query->where('grade_level', $request->grade_level);
+        }
+
+        // Filter by status
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by gender
+        if ($request->has('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
+        // Search by name, admission number, or email
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })->orWhere('admission_number', 'like', "%{$search}%");
+        }
+
+        // Pagination
+        $perPage = $request->get('per_page', 15);
+        $students = $query->paginate($perPage);
+
         return StudentResource::collection($students);
     }
 
@@ -111,5 +135,30 @@ class StudentController extends Controller
 
         $student->delete();
         return response()->json(['message' => 'Student deleted successfully']);
+    }
+     /**
+     * Get student statistics
+     */
+    public function statistics(Request $request)
+    {
+        $query = Student::query();
+
+        if ($request->has('school_name')) {
+            $query->where('school_name', $request->school_name);
+        }
+
+        $stats = [
+            'total' => $query->count(),
+            'active' => (clone $query)->where('status', 'active')->count(),
+            'inactive' => (clone $query)->where('status', 'inactive')->count(),
+            'by_gender' => (clone $query)->groupBy('gender')
+                ->select('gender', DB::raw('count(*) as count'))
+                ->pluck('count', 'gender'),
+            'by_grade' => (clone $query)->groupBy('grade_level')
+                ->select('grade_level', DB::raw('count(*) as count'))
+                ->pluck('count', 'grade_level'),
+        ];
+
+        return response()->json($stats);
     }
 }

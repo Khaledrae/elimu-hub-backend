@@ -12,7 +12,10 @@ class AdminService
     {
         return DB::transaction(function () use ($data) {
             $user = User::create([
-                'name' => $data['name'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'county' => $data['county'],
+                'phone' => $data['phone'],
                 'email' => $data['email'],
                 'password' => bcrypt($data['password']),
                 'role' => 'admin',
@@ -22,7 +25,7 @@ class AdminService
             $admin = Admin::create([
                 'user_id' => $user->id,
                 'admin_level' => $data['admin_level'],
-                'school_name' => $data['school_name'] ?? null,
+                'school_id' => $data['school_id'] ?? null,
             ]);
 
             return $user->load('admin');

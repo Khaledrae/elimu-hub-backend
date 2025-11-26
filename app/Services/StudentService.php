@@ -16,8 +16,11 @@ class StudentService
         return DB::transaction(function () use ($data) {
             // Step 1: Create user
             $user = User::create([
-                'name' => $data['name'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
                 'email' => $data['email'],
+                'county' => $data['county'],
+                'phone' => $data['phone'],
                 'password' => bcrypt($data['password']),
                 'role' => 'student',
                 'status' => 'active',

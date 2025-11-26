@@ -27,4 +27,8 @@ class School extends Model
     {
         return $this->hasMany(Student::class);
     }
+    public function county()
+    {
+        return $this->belongsTo(County::class, 'county', 'id');
+    }
 }

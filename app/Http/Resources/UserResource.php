@@ -32,7 +32,7 @@ class UserResource extends JsonResource
                         'id' => $this->teacher->id,
                         'staff_number' => $this->teacher->staff_number,
                         'subject_specialization' => $this->teacher->subject_specialization,
-                        'school_name' => $this->teacher->school_name,
+                        'school_name' => $this->teacher->school->school_name,
                         'qualification' => $this->teacher->qualification,
                         'experience_years' => $this->teacher->experience_years,
                         'gender' => $this->teacher->gender,

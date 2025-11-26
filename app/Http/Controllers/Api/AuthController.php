@@ -37,7 +37,17 @@ class AuthController extends Controller
 
         // Shared base validation (for all users)
         $baseValidator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name'  => 'required|string|max:255',
+            'county' => 'nullable|integer|exists:counties,id',
+            'phone' => [
+                'nullable',
+                'string',
+                'min:10',
+                'max:12',
+                'regex:/^\d+$/',
+                'unique:users'
+            ],
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string|min:6|confirmed',
             'role' => 'nullable|string|in:student,teacher,admin',
@@ -51,16 +61,7 @@ class AuthController extends Controller
         if ($isStudent) {
             $studentRequest = new StudentStoreRequest();
             $studentRequest->merge($request->all());
-            /*
-            $studentValidator = Validator::make(
-                $studentRequest->all(),
-                $studentRequest->rules()
-            );
 
-            if ($studentValidator->fails()) {
-                return response()->json($studentValidator->errors(), 422);
-            }
-*/
             // Pass all data to the service
             $user = $this->studentService->registerStudent($request->all());
         } elseif ($role === 'teacher') {
@@ -108,6 +109,25 @@ class AuthController extends Controller
         ]);
     }
 
+    //With the User
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+
+        if (!$token = auth()->attempt($credentials)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        return response()->json([
+            'token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60,
+            'user' => auth()->user(),
+        ]);
+    }
+
+
+    /*
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
@@ -118,7 +138,7 @@ class AuthController extends Controller
 
         return $this->respondWithToken($token);
     }
-
+*/
     public function me()
     {
         $user = auth()->user();

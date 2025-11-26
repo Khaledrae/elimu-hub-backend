@@ -12,8 +12,11 @@ class TeacherService
     {
         return DB::transaction(function () use ($data) {
             $user = User::create([
-                'name' => $data['name'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'county' => $data['county'],
                 'email' => $data['email'],
+                'phone' => $data['phone'],
                 'password' => bcrypt($data['password']),
                 'role' => 'teacher',
                 'status' => 'active',

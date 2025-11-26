@@ -25,7 +25,10 @@ class SchoolController extends Controller
         $school = School::create($validated);
         return response()->json($school, 201);
     }
-
+    public function show(School $school)
+    {
+        return response()->json(['data' => $school->load(['county', 'admins.user'])]);
+    }
     public function update(Request $request, School $school)
     {
         $validated = $request->validate([

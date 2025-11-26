@@ -12,7 +12,7 @@ class Admin extends Model
     protected $fillable = [
         'user_id',
         'admin_level',
-        'school_name',
+        'school_id',
         'status',
     ];
 

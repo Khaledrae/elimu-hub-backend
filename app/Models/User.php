@@ -18,15 +18,17 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var list<string>
      */
+
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'role',
         'phone',
+        'county',
         'status',
     ];
-
 
     /**
      * The attributes that should be hidden for serialization.
@@ -92,6 +94,10 @@ class User extends Authenticatable implements JWTSubject
     public function school()
     {
         return $this->belongsTo(School::class);
+    }
+    public function countyResidence()
+    {
+        return $this->belongsTo(County::class);
     }
     public function wards()
     {

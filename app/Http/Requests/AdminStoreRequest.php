@@ -15,7 +15,8 @@ class AdminStoreRequest extends FormRequest
     {
         return [
             'admin_level' => 'required|in:super_admin,school_admin',
-            'school_name' => 'nullable|string|max:255',
+            'school_id' => 'nullable|required_if:admin_level,school_admin|exists:schools,id',
+            'status' => 'nullable|string|in:active,inactive'
         ];
     }
 }
