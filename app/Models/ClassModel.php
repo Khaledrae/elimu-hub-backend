@@ -23,4 +23,8 @@ class ClassModel extends Model
     {
         return $this->belongsTo(User::class, 'manager_id');
     }
+    public function students()
+    {
+        return $this->hasMany(Student::class, 'grade_level', 'name');
+    }
 }

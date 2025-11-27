@@ -21,6 +21,7 @@ class LessonController extends Controller
             'class_id' => 'nullable|exists:classes,id',
             'teacher_id' => 'nullable|exists:teachers,user_id',
             'title' => 'required|string|max:255',
+            'content_type' => 'required|in:text,video,document',
             'content' => 'nullable|string',
             'video_url' => 'nullable|string',
             'document_path' => 'nullable|string',

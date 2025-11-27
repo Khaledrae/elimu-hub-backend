@@ -44,6 +44,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
 Route::middleware('auth:api')->group(function () {
     Route::get('courses/{id}/lessons', [LessonController::class, 'byCourse']);
     Route::get('classes/{id}/courses', [ClassModelController::class, 'courses']);
+    Route::get('classes/{id}/lessons', [ClassModelController::class, 'getLessons']);
     Route::apiResource('assessments', AssessmentController::class);
     Route::get('students/performance', [StudentPerformanceController::class, 'summary']);
     Route::apiResource('questions', QuestionController::class);

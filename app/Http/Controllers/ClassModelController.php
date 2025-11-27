@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ClassModelResource;
 use App\Models\ClassModel;
 use Illuminate\Http\Request;
 
@@ -10,7 +11,8 @@ class ClassModelController extends Controller
 {
     public function index()
     {
-        return response()->json(ClassModel::with(['manager', 'courses'])->get());
+        $classes = ClassModel::with(['manager', 'courses', 'students', 'lessons'])->get();
+        return ClassModelResource::collection($classes);
     }
 
     public function store(Request $request)
@@ -28,7 +30,8 @@ class ClassModelController extends Controller
 
     public function show($id)
     {
-        $class = ClassModel::with(['manager', 'courses'])->findOrFail($id);
+        $class = ClassModel::with(['manager', 'courses.teacher.user', 'students.user', 'lessons.course', 'lessons.teacher.user'])
+                            ->findOrFail($id);
         return response()->json($class);
     }
 
@@ -44,6 +47,7 @@ class ClassModelController extends Controller
         ClassModel::findOrFail($id)->delete();
         return response()->json(['message' => 'Class deleted successfully']);
     }
+    /*
     public function courses($id)
     {
         $class = ClassModel::with(['courses.teacher'])->findOrFail($id);
@@ -62,6 +66,71 @@ class ClassModelController extends Controller
                     'level' => $course->level,
                     'teacher' => optional($course->teacher->user)->name,
                     'status' => $course->status,
+                ];
+            }),
+        ]);
+    }*/
+    public function courses($id)
+    {
+        $class = ClassModel::with(['courses.teacher.user'])->findOrFail($id);
+
+        return response()->json([
+            'class' => [
+                'id' => $class->id,
+                'name' => $class->name,
+                'level_group' => $class->level_group,
+            ],
+            'courses' => $class->courses->map(function ($course) {
+                $teacher = optional($course->teacher);
+                $user = optional($teacher->user);
+
+                $teacherName = $user->first_name && $user->last_name
+                    ? $user->first_name . ' ' . $user->last_name
+                    : null;
+
+                return [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'slug' => $course->slug,
+                    'level' => $course->level,
+                    'teacher' => $teacherName,
+                    'status' => $course->status,
+                ];
+            }),
+        ]);
+    }
+    public function getLessons($id)
+    {
+        $class = ClassModel::with(['lessons.course', 'lessons.teacher.user'])->findOrFail($id);
+
+        return response()->json([
+            'class' => [
+                'id' => $class->id,
+                'name' => $class->name,
+                'level_group' => $class->level_group,
+            ],
+            'lessons' => $class->lessons->map(function ($lesson) {
+                $teacherName = null;
+
+                if ($lesson->teacher && $lesson->teacher->user) {
+                    $teacherName = $lesson->teacher->user->first_name . ' ' . $lesson->teacher->user->last_name;
+                }
+
+                return [
+                    'id' => $lesson->id,
+                    'title' => $lesson->title,
+                    'content' => $lesson->content,
+                    'video_url' => $lesson->video_url,
+                    'document_path' => $lesson->document_path,
+                    'order' => $lesson->order,
+                    'status' => $lesson->status,
+                    'teacher' => $teacherName,
+                    'course' => $lesson->course ? [
+                        'id' => $lesson->course->id,
+                        'title' => $lesson->course->title,
+                    ] : null,
+                    'created_at' => $lesson->created_at,
+                    'updated_at' => $lesson->updated_at,
                 ];
             }),
         ]);
