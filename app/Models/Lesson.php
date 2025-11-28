@@ -32,4 +32,8 @@ class Lesson extends Model
     {
         return $this->belongsTo(Teacher::class, 'teacher_id', 'user_id');
     }
+    public function quiz()
+    {
+        return $this->belongsTo(Assessment::class);
+    }
 }

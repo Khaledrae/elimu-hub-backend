@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -43,5 +44,49 @@ class CourseController extends Controller
         $this->courseService->deleteCourse($course);
         return response()->json(['message' => 'Course deleted']);
     }
-}
+    // In CourseController
+    public function classes(Course $course)
+    {
+        $classes = $course->classes;
 
+        return response()->json($classes->map(function ($class) {
+            return [
+                'id' => $class->id,
+                'name' => $class->name,
+                'level_group' => $class->level_group,
+            ];
+        }));
+    }
+
+    public function lessons(Course $course)
+    {
+        $lessons = $course->lessons()->orderBy('order')->get();
+
+        return response()->json($lessons->map(function ($lesson) {
+            return [
+                'id' => $lesson->id,
+                'title' => $lesson->title,
+                'description' => $lesson->content,
+                'content_type' => $lesson->content_type ?? 'text',
+                'order' => $lesson->order,
+                'status' => $lesson->status,
+                'created_at' => $lesson->created_at,
+            ];
+        }));
+    }
+
+    public function assessments(Course $course)
+    {
+        $assessments = $course->assessments;
+
+        return response()->json($assessments->map(function ($assessment) {
+            return [
+                'id' => $assessment->id,
+                'title' => $assessment->title,
+                'type' => $assessment->type,
+                'due_date' => $assessment->due_date,
+                'status' => $assessment->status,
+            ];
+        }));
+    }
+}

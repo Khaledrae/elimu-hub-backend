@@ -42,6 +42,10 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::get('/teachers/available-managers', [TeacherController::class, 'availableManagers']);
 });
 Route::middleware('auth:api')->group(function () {
+    // routes/api.php
+    Route::get('courses/{id}/classes', [CourseController::class, 'classes']);
+    //Route::get('courses/{id}/lessons', [CourseController::class, 'lessons']);
+    Route::get('courses/{id}/assessments', [CourseController::class, 'assessments']);
     Route::get('courses/{id}/lessons', [LessonController::class, 'byCourse']);
     Route::get('classes/{id}/courses', [ClassModelController::class, 'courses']);
     Route::get('classes/{id}/lessons', [ClassModelController::class, 'getLessons']);
