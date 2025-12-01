@@ -10,6 +10,7 @@ class Lesson extends Model
         'class_id',
         'teacher_id',
         'title',
+        'description',
         'content_type',
         'content',
         'video_url',

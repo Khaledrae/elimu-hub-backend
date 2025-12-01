@@ -26,7 +26,6 @@ class CourseRequest extends FormRequest
             'description' => 'nullable|string',
             'teacher_id' => 'nullable|exists:users,id',
             'thumbnail' => 'nullable|string',
-            'level' => 'nullable|string',
             'status' => 'in:draft,published,archived',
         ];
     }

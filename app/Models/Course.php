@@ -13,7 +13,6 @@ class Course extends Model
         'description',
         'teacher_id',
         'thumbnail',
-        'level',
         'status',
     ];
 
