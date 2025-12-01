@@ -23,6 +23,7 @@ class LessonController extends Controller
             'title' => 'required|string|max:255',
             'content_type' => 'required|in:text,video,document',
             'content' => 'nullable|string',
+            'description' => 'nullable|string',
             'video_url' => 'nullable|string',
             'document_path' => 'nullable|string',
             'order' => 'nullable|integer',

@@ -17,9 +17,10 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             //CountySeeder::class,
-            TeacherSeeder::class,
-            CourseSeeder::class,
-            ClassModelSeeder::class,
+            //TeacherSeeder::class,
+            //CourseSeeder::class,
+            //ClassModelSeeder::class,
+            LessonSeeder::class,
         ]);
     }
 }

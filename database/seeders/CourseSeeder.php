@@ -31,8 +31,8 @@ class CourseSeeder extends Seeder
                     'description' => $title . ' course under CBC curriculum.',
                     'teacher_id' => $teacher ? $teacher->user_id : null,
                     'thumbnail' => 'default.png',
-                    'level' => 'CBC',
-                    'status' => 'active',
+                   
+                    'status' => 'published',
                 ]
             );
         }
