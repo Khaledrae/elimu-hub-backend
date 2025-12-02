@@ -15,7 +15,7 @@ return new class extends Migration
         //
         Schema::table('courses', function (Blueprint $table) {
             // Drop the existing foreign key constraint
-            //$table->dropForeign(['teacher_id']);
+            $table->dropForeign(['teacher_id']);
 
             // Recreate the foreign key to reference teachers.user_id
             $table->foreign('teacher_id')
@@ -37,11 +37,11 @@ return new class extends Migration
             $table->dropForeign(['teacher_id']);
 
             // Restore the original foreign key that references id
-           /* $table->foreign('teacher_id')
+            $table->foreign('teacher_id')
                 ->references('id')
                 ->on('teachers')
                 ->onDelete('set null');
-                */
+               
         });
     }
 };
