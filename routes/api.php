@@ -42,7 +42,11 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::get('/teachers/available-managers', [TeacherController::class, 'availableManagers']);
 });
 Route::middleware('auth:api')->group(function () {
-    // routes/api.php
+    
+    
+    Route::apiResource('classes', ClassModelController::class)->only(['index', 'show']);
+    Route::apiResource('courses', CourseController::class)->only(['index', 'show']);
+    Route::apiResource('lessons', LessonController::class)->only(['index', 'show']);
     Route::get('courses/{id}/classes', [CourseController::class, 'classes']);
     //Route::get('courses/{id}/lessons', [CourseController::class, 'lessons']);
     Route::get('courses/{id}/assessments', [CourseController::class, 'assessments']);

@@ -6,10 +6,14 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Admin;
 use App\Models\School;
+use Faker\Factory as Faker;
+
 class AdminSeeder extends Seeder
 {
     public function run()
     {
+        $faker = Faker::create();  
+
         $schoolIds = School::pluck('id')->toArray();
 
         $adminNames = [
@@ -36,11 +40,10 @@ class AdminSeeder extends Seeder
                 ]
             );
 
-            // Determine admin level
-            $adminLevel = fake()->randomElement(['super_admin', 'school_admin']);
+            // Use faker instead of fake()
+            $adminLevel = $faker->randomElement(['super_admin', 'school_admin']);
 
-            // If super_admin → school_id is NULL
-            // If school_admin → assign random school
+            // Assign NULL school if super_admin, otherwise random school
             $schoolId = $adminLevel === 'super_admin'
                 ? null
                 : $schoolIds[array_rand($schoolIds)];
