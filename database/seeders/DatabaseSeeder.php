@@ -16,13 +16,16 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
-            CountySeeder::class,
-            TeacherSeeder::class,
-            CourseSeeder::class,
-            ClassModelSeeder::class,
-            LessonSeeder::class,
-            AssessmentSeeder::class,
-            QuestionSeeder::class,
+            //CountySeeder::class,
+            SchoolSeeder::class,
+            AdminSeeder::class,
+            StudentSeeder::class,
+            //TeacherSeeder::class,
+            // CourseSeeder::class,
+            // ClassModelSeeder::class,
+            // LessonSeeder::class,
+            // AssessmentSeeder::class,
+            // QuestionSeeder::class,
         ]);
     }
 }

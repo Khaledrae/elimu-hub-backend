@@ -47,6 +47,7 @@ Route::middleware('auth:api')->group(function () {
     //Route::get('courses/{id}/lessons', [CourseController::class, 'lessons']);
     Route::get('courses/{id}/assessments', [CourseController::class, 'assessments']);
     Route::get('courses/{id}/lessons', [LessonController::class, 'byCourse']);
+    Route::apiResource('classes', ClassModelController::class)->only(['index', 'show']);
     Route::get('classes/{id}/courses', [ClassModelController::class, 'courses']);
     Route::get('classes/{id}/lessons', [ClassModelController::class, 'getLessons']);
     Route::apiResource('assessments', AssessmentController::class);
