@@ -2,16 +2,27 @@
 
 namespace Database\Seeders;
 
+use App\Models\ClassModel;
+use App\Models\Course;
 use Illuminate\Database\Seeder;
 use App\Models\Lesson;
+use App\Models\Teacher;
 
 class LessonSeeder extends Seeder
 {
     public function run(): void
     {
-        $classId = 6; // Grade 1
-        $courseId = 5; // English
-        $teacherId = 26;
+        $grade = "Grade 1";
+        $class = ClassModel::where('name', $grade)->first();
+        $classId = $class->id; 
+
+        $subject = 'English';
+        $course = Course::where('title', $subject)->first();
+        $courseId = $course->id; 
+
+        $teacher = Teacher::where('subject_specialization', $subject)->first();
+        $teacherId = $teacher ? $teacher->id : null;
+        
 
         $lessons = [
             [
