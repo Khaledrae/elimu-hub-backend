@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Assessment;
+use App\Models\Lesson;
 use App\Models\Teacher;
 
 class AssessmentSeeder extends Seeder
@@ -14,8 +15,12 @@ class AssessmentSeeder extends Seeder
         $teacher = Teacher::where('subject_specialization', $subject)->first();
         $user_id = $teacher ? $teacher->id : null;
 
+        $lessonTitle = "Introduction to English Letters";
+        $lesson = Lesson::where('title', $lessonTitle)->first();
+        $lessonId = $lesson ? $lesson->id : null;
+
         $assessment = Assessment::create([
-            'lesson_id'       => 11,             // Adjust if needed
+            'lesson_id'       => $lessonId,             // Adjust if needed
             'teacher_id'      => $user_id,
             'title'           => 'English Basics Quiz – Alphabet & Sounds',
             'instructions'    => 'Answer all questions. Choose the best option.',

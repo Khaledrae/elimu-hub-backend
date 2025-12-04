@@ -4,13 +4,17 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Question;
+use App\Models\Teacher;
 
 class QuestionSeeder extends Seeder
 {
     public function run(): void
     {
         $assessmentId = (int) file_get_contents(storage_path('app/assessment_id.txt'));
-        $teacherId = 26;
+        $subject = 'English';
+        $teacher = Teacher::where('subject_specialization', $subject)->first();
+        $user_id = $teacher ? $teacher->id : null;
+
 
         $questions = [
             [
@@ -63,7 +67,7 @@ class QuestionSeeder extends Seeder
         foreach ($questions as $q) {
             Question::create([
                 'assessment_id' => $assessmentId,
-                'set_by'        => $teacherId,
+                'set_by'        => $user_id,
                 'question_text' => $q['question_text'],
                 'option_a'      => $q['option_a'],
                 'option_b'      => $q['option_b'],
