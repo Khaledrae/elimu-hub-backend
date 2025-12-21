@@ -117,12 +117,14 @@ class AuthController extends Controller
         if (!$token = auth()->attempt($credentials)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
+        $user = auth()->user();
+        $userDetails = new UserResource($user->load(['student', 'teacher', 'admin']));
 
         return response()->json([
             'token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
-            'user' => auth()->user(),
+            'user' => $userDetails,
         ]);
     }
 
