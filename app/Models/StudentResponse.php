@@ -11,11 +11,13 @@ class StudentResponse extends Model
     protected $fillable = [
         'student_id',
         'assessment_id',
+        'attempt_id',
         'question_id',
         'selected_option',
         'is_correct',
         'marks_awarded',
     ];
+
 
     public function student()
     {

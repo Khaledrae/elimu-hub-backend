@@ -36,7 +36,10 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::apiResource('classes', ClassModelController::class);
     Route::apiResource('courses', CourseController::class);
     Route::apiResource('lessons', LessonController::class);
-    Route::apiResource('users', UsersController::class);
+    //Route::apiResource('users', UsersController::class)->only(['store', 'update', 'destroy']);
+    Route::post('users', [UsersController::class, 'store']);
+    Route::put('users/{user}', [UsersController::class, 'update']);
+    Route::delete('users/{user}', [UsersController::class, 'destroy']);
     Route::patch('users/{id}/status', [UsersController::class, 'updateStatus']);
     Route::get('students/statistics/summary', [StudentController::class, 'statistics']);
     Route::post('classes/{id}/assign-courses', [ClassModelController::class, 'assignCourses']);
@@ -56,23 +59,31 @@ Route::middleware('auth:api')->group(function () {
 
     Route::prefix('my')->group(function () {
         Route::get('progress', [CoveredLessonController::class, 'overallProgress']);
-        Route::get('progress/{course}', [CoveredLessonController::class, 'progress']);
+        Route::get('progress/{course}/{student}', [CoveredLessonController::class, 'progress']);
         Route::get('recent-lessons', [CoveredLessonController::class, 'recentLessons']);
     });
     Route::apiResource('classes', ClassModelController::class)->only(['index', 'show']);
     Route::apiResource('courses', CourseController::class)->only(['index', 'show']);
     Route::apiResource('lessons', LessonController::class)->only(['index', 'show']);
+    Route::apiResource('classes', ClassModelController::class)->only(['index', 'show']);
+    Route::apiResource('assessments', AssessmentController::class);
+    Route::apiResource('questions', QuestionController::class);
+   // Route::apiResource('users', UsersController::class)->only(['show', 'index']);
     Route::get('courses/{id}/classes', [CourseController::class, 'classes']);
     Route::get('courses/{id}/assessments', [CourseController::class, 'assessments']);
+    Route::get('users', [UsersController::class, 'index']);
+    Route::get('users/{user}', [UsersController::class, 'show']);
     Route::get('courses/{id}/lessons', [LessonController::class, 'byCourse']);
-    Route::apiResource('classes', ClassModelController::class)->only(['index', 'show']);
     Route::get('classes/{id}/courses', [ClassModelController::class, 'courses']);
     Route::get('classes/{id}/lessons', [ClassModelController::class, 'getLessons']);
-    Route::apiResource('assessments', AssessmentController::class);
     Route::get('students/performance', [StudentPerformanceController::class, 'summary']);
-    Route::apiResource('questions', QuestionController::class);
     Route::post('assessments/{assessmentId}/submit', [StudentResponseController::class, 'submit']);
     Route::get('classes/{id}/leaderboard', [LeaderboardController::class, 'classLeaderboard']);
     Route::get('courses/{id}/leaderboard', [LeaderboardController::class, 'courseLeaderboard']);
     Route::get('assessments/{assessment}/results', [StudentResponseController::class, 'results']);
+    Route::get('lessons/{lesson}/assessment', [AssessmentController::class, 'getByLesson']);
+    Route::post('assessments/{assessment}/attempt/start', [StudentResponseController::class, 'startAttempt']);
+    Route::post('assessments/{assessment}/submit', [StudentResponseController::class, 'submit']);
+    Route::get('assessments/{assessment}/attempts', [StudentResponseController::class, 'getAttempts']);
+    Route::get('assessments/{assessment}/attempts/{attempt}/results', [StudentResponseController::class, 'results']);
 });

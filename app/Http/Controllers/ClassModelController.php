@@ -31,7 +31,7 @@ class ClassModelController extends Controller
     public function show($id)
     {
         $class = ClassModel::with(['manager', 'courses.teacher.user', 'students.user', 'lessons.course', 'lessons.teacher.user'])
-                            ->findOrFail($id);
+            ->findOrFail($id);
         return response()->json($class);
     }
 
@@ -72,7 +72,9 @@ class ClassModelController extends Controller
     }*/
     public function courses($id)
     {
-        $class = ClassModel::with(['courses.teacher.user'])->findOrFail($id);
+        $class = ClassModel::with(['courses.teacher.user', 'courses' => function ($q) {
+            $q->withCount('lessons');
+        }])->findOrFail($id);
 
         return response()->json([
             'class' => [
@@ -95,6 +97,7 @@ class ClassModelController extends Controller
                     'level' => $course->level,
                     'teacher' => $teacherName,
                     'status' => $course->status,
+                    'lessons_count' => $course->lessons_count,
                 ];
             }),
         ]);

@@ -220,7 +220,7 @@ class CoveredLessonController extends Controller
             : 0;
 
         return response()->json([
-            'course' => $course->only(['id', 'name', 'description']),
+            'course' => $course->only(['id', 'title', 'description']),
             'progress' => [
                 'total_lessons' => $totalLessons,
                 'completed' => $completedLessons,
