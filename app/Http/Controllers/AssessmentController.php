@@ -14,7 +14,21 @@ class AssessmentController extends Controller
     {
         return Assessment::with(['lesson', 'teacher.user'])->paginate(10);
     }
-    
+    // Get assessment by lesson_id
+    public function getByLesson($lessonId)
+    {
+        $assessment = Assessment::with(['lesson', 'teacher.user', 'questions'])
+            ->where('lesson_id', $lessonId)
+            ->first();
+
+        if (!$assessment) {
+            return response()->json([
+                'message' => 'No assessment found for this lesson'
+            ], 404);
+        }
+
+        return response()->json($assessment);
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -31,38 +45,9 @@ class AssessmentController extends Controller
 
         return response()->json($assessment->load(['lesson', 'teacher.user']), 201);
     }
-      /*public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'lesson_id' => 'required|exists:lessons,id',
-        'teacher_id' => 'nullable|exists:teachers,id',
-        'title' => 'required|string|max:255',
-        'instructions' => 'nullable|string',
-        'type' => 'required|in:quiz,assignment,exam',
-        'total_marks' => 'required|integer|min:1',
-        'duration_minutes' => 'nullable|integer|min:1',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed',
-            'errors' => $validator->errors()
-        ], 422);
-    }
-
-    $assessment = Assessment::create($validator->validated());
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Assessment created successfully',
-        'data' => $assessment->load(['lesson', 'teacher.user'])
-    ], 201);
-}
- */
     public function show($id)
     {
-        return Assessment::with(['lesson', 'teacher.user'])->findOrFail($id);
+        return Assessment::with(['lesson', 'teacher.user', 'questions'])->findOrFail($id);
     }
 
     public function update(Request $request, $id)
@@ -84,5 +69,19 @@ class AssessmentController extends Controller
     {
         Assessment::findOrFail($id)->delete();
         return response()->json(['message' => 'Assessment deleted successfully']);
+    }
+    // Add this method to your existing AssessmentController
+
+    public function byCourse($courseId)
+    {
+        $assessments = Assessment::whereIn('lesson_id', function ($query) use ($courseId) {
+            $query->select('id')
+                ->from('lessons')
+                ->where('course_id', $courseId);
+        })
+            ->with(['lesson', 'questions'])
+            ->get();
+
+        return response()->json($assessments);
     }
 }

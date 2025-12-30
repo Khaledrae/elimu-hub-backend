@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CourseRequest;
+use App\Models\ClassModel;
 use App\Models\Course;
 use App\Services\CourseService;
 use Illuminate\Http\Request;
@@ -88,5 +89,20 @@ class CourseController extends Controller
                 'status' => $assessment->status,
             ];
         }));
+    }
+    // Add this method to your existing CourseController
+
+    public function getClasses($courseId)
+    {
+        $course = Course::findOrFail($courseId);
+
+        // Get classes associated with this course through lessons
+        $classes = ClassModel::join('lessons', 'classes.id', '=', 'lessons.class_id')
+            ->where('lessons.course_id', $courseId)
+            ->select('classes.*')
+            ->distinct()
+            ->get();
+
+        return response()->json($classes);
     }
 }

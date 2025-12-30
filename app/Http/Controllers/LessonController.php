@@ -70,4 +70,14 @@ class LessonController extends Controller
 
         return response()->json($lessons);
     }
+    public function byCourseAndClass($courseId, $classId)
+    {
+        $lessons = Lesson::where('course_id', $courseId)
+            ->where('class_id', $classId)
+            ->with(['teacher', 'class'])
+            ->orderBy('order')
+            ->get();
+
+        return response()->json($lessons);
+    }
 }

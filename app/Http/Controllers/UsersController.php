@@ -35,6 +35,10 @@ class UsersController extends Controller
      */
     public function index(Request $request)
     {
+//         logger([
+//     'user_id' => auth()->id(),
+//     'role' => auth()->user()->role,
+// ]);
         // Only allow admin users to access this
         if (auth()->user()->role !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
