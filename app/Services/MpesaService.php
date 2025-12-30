@@ -159,28 +159,29 @@ class MpesaService
 
             $responseData = json_decode($response, true);
 
+            $responseData = json_decode($response, true);
+
             Log::info('STK RAW RESPONSE', [
                 'http_code' => $httpCode,
                 'response' => $responseData,
                 'error' => $error,
             ]);
 
-            $responseData = $response->json();
-
-            if ($response->successful() && $responseData['ResponseCode'] == '0') {
+            if ($httpCode === 200 && isset($responseData['ResponseCode']) && $responseData['ResponseCode'] === '0') {
                 return [
                     'success' => true,
                     'merchant_request_id' => $responseData['MerchantRequestID'],
                     'checkout_request_id' => $responseData['CheckoutRequestID'],
                     'response_description' => $responseData['ResponseDescription'],
-                    'customer_message' => $responseData['CustomerMessage']
+                    'customer_message' => $responseData['CustomerMessage'],
                 ];
             }
 
-            Log::error('STK Push failed', ['response' => $responseData]);
             return [
                 'success' => false,
-                'error' => $responseData['errorMessage'] ?? 'STK Push failed'
+                'error' => $responseData['errorMessage']
+                    ?? $responseData['ResponseDescription']
+                    ?? 'STK Push failed',
             ];
         } catch (\Exception $e) {
             Log::error('STK Push exception', ['error' => $e->getMessage()]);
