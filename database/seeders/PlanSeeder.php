@@ -20,7 +20,7 @@ class PlanSeeder extends Seeder
             [
                 'code' => 'premium_daily',
                 'name' => 'Premium Daily',
-                'amount' => 50,
+                'amount' => 1,
                 'duration_days' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -28,7 +28,7 @@ class PlanSeeder extends Seeder
             [
                 'code' => 'premium_monthly',
                 'name' => 'Premium Monthly',
-                'amount' => 500,
+                'amount' => 50,
                 'duration_days' => 30,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -36,7 +36,7 @@ class PlanSeeder extends Seeder
             [
                 'code' => 'premium_term',
                 'name' => 'Premium Term',
-                'amount' => 1500,
+                'amount' => 100,
                 'duration_days' => 120,
                 'created_at' => now(),
                 'updated_at' => now(),

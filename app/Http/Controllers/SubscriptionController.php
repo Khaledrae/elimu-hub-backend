@@ -75,7 +75,7 @@ class SubscriptionController extends Controller
             'merchant_request_id' => $result['merchant_request_id'],
             'checkout_request_id' => $result['checkout_request_id'],
             'amount' => $amount,
-            'phone_number' => $validated['phone_number'],
+            'phone' => $validated['phone_number'],
             'status' => 'pending',
             'response_data' => $result,
         ]);
