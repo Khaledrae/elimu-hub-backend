@@ -37,13 +37,14 @@ class MpesaService
     {
         $url = $this->getBaseUrl() . '/oauth/v1/generate?grant_type=client_credentials';
 
-        $response = Http::withBasicAuth(
-            trim($this->consumerKey),
-            trim($this->consumerSecret)
-        )
-        ->acceptJson()
-        ->get($url);
-
+        // The Daraja API expects Basic Auth with base64 encoded credentials
+        $credentials = base64_encode($this->consumerKey . ':' . $this->consumerSecret);
+        
+       $response = Http::withHeaders([
+            'Authorization' => 'Basic ' . $credentials,
+            'Content-Type' => 'application/json',
+        ])->get($url);
+        
         if ($response->successful()) {
             $data = $response->json();
             return $data['access_token'];
