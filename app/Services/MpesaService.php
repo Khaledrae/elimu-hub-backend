@@ -37,9 +37,12 @@ class MpesaService
     {
         $url = $this->getBaseUrl() . '/oauth/v1/generate?grant_type=client_credentials';
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Basic ' . base64_encode($this->consumerKey . ':' . $this->consumerSecret)
-        ])->get($url);
+        $response = Http::withBasicAuth(
+            trim($this->consumerKey),
+            trim($this->consumerSecret)
+        )
+        ->acceptJson()
+        ->get($url);
 
         if ($response->successful()) {
             $data = $response->json();
