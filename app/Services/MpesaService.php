@@ -27,6 +27,7 @@ class MpesaService
 
     private function getBaseUrl()
     {
+
         return $this->environment === 'production'
             ? 'https://api.safaricom.co.ke'
             : 'https://sandbox.safaricom.co.ke';
@@ -35,7 +36,7 @@ class MpesaService
     private function generateAccessToken()
     {
         $url = $this->getBaseUrl() . '/oauth/v1/generate?grant_type=client_credentials';
-        
+
         $response = Http::withHeaders([
             'Authorization' => 'Basic ' . base64_encode($this->consumerKey . ':' . $this->consumerSecret)
         ])->get($url);
@@ -45,7 +46,11 @@ class MpesaService
             return $data['access_token'];
         }
 
-        Log::error('Failed to generate M-Pesa access token', ['response' => $response->json()]);
+        Log::error('MPESA TOKEN RAW RESPONSE', [
+            'status' => $response->status(),
+            'body'   => $response->body(),
+            'headers' => $response->headers(),
+        ]);
         throw new \Exception('Failed to generate access token');
     }
 
@@ -67,9 +72,9 @@ class MpesaService
         try {
             $accessToken = $this->generateAccessToken();
             $passwordData = $this->generatePassword();
-            
+
             $url = $this->getBaseUrl() . '/mpesa/stkpush/v1/processrequest';
-            
+
             $payload = [
                 'BusinessShortCode' => $this->shortcode,
                 'Password' => $passwordData['password'],
@@ -90,7 +95,7 @@ class MpesaService
             ])->post($url, $payload);
 
             $responseData = $response->json();
-            
+
             if ($response->successful() && $responseData['ResponseCode'] == '0') {
                 return [
                     'success' => true,
@@ -106,7 +111,6 @@ class MpesaService
                 'success' => false,
                 'error' => $responseData['errorMessage'] ?? 'STK Push failed'
             ];
-
         } catch (\Exception $e) {
             Log::error('STK Push exception', ['error' => $e->getMessage()]);
             return [
@@ -122,9 +126,9 @@ class MpesaService
         try {
             $accessToken = $this->generateAccessToken();
             $passwordData = $this->generatePassword();
-            
+
             $url = $this->getBaseUrl() . '/mpesa/stkpushquery/v1/query';
-            
+
             $payload = [
                 'BusinessShortCode' => $this->shortcode,
                 'Password' => $passwordData['password'],
@@ -138,7 +142,6 @@ class MpesaService
             ])->post($url, $payload);
 
             return $response->json();
-
         } catch (\Exception $e) {
             Log::error('Check transaction status failed', ['error' => $e->getMessage()]);
             return null;
@@ -149,14 +152,13 @@ class MpesaService
     {
         // Convert to 2547XXXXXXXX format
         $phone = preg_replace('/\D/', '', $phone);
-        
+
         if (strlen($phone) === 9) {
             return '254' . $phone;
         } elseif (strlen($phone) === 10 && substr($phone, 0, 1) === '0') {
             return '254' . substr($phone, 1);
         }
-        
+
         return $phone;
     }
-    
 }
