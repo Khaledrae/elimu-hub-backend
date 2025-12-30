@@ -50,7 +50,7 @@ class SubscriptionController extends Controller
             ], 400);
         }
 
-        $amount = $planPrices->price;
+        $amount = $planPrices->amount;
         $accountReference = 'ELIMU' . str_pad($user->id, 6, '0', STR_PAD_LEFT);
         $transactionDesc = "ElimuHub {$planPrices->name} subscription";
 

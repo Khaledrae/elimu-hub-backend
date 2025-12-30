@@ -109,7 +109,20 @@ class MpesaService
     private function generatePassword()
     {
         $timestamp = $this->generateTimestamp();
-        $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
+        
+        // IMPORTANT: Debug the password generation
+        $passwordString = $this->shortcode . $this->passkey . $timestamp;
+        $password = base64_encode($passwordString);
+        
+        Log::debug('Password Generation', [
+            'shortcode' => $this->shortcode,
+            'passkey_first_10' => substr($this->passkey, 0, 10) . '...',
+            'passkey_length' => strlen($this->passkey),
+            'timestamp' => $timestamp,
+            'password_string' => $passwordString,
+            'password_encoded' => $password,
+        ]);
+        
         return ['password' => $password, 'timestamp' => $timestamp];
     }
 
@@ -117,11 +130,19 @@ class MpesaService
     public function stkPush($phoneNumber, $amount, $accountReference, $transactionDesc)
     {
         try {
+            Log::info('Initiating STK Push', [
+                'phone' => $phoneNumber,
+                'original_amount' => $amount,
+                'reference' => $accountReference,
+                'desc' => $transactionDesc,
+            ]);
+            
             $accessToken = $this->generateAccessToken();
             $passwordData = $this->generatePassword();
-
+            
             $url = $this->getBaseUrl() . '/mpesa/stkpush/v1/processrequest';
             $amount = $this->formatAmount($amount);
+            
             $payload = [
                 'BusinessShortCode' => $this->shortcode,
                 'Password' => $passwordData['password'],
@@ -136,37 +157,53 @@ class MpesaService
                 'TransactionDesc' => $transactionDesc,
             ];
 
+            // Log the complete payload for debugging
+            Log::info('STK Push Request Payload', [
+                'url' => $url,
+                'shortcode' => $this->shortcode,
+                'timestamp' => $passwordData['timestamp'],
+                'password_encoded' => $passwordData['password'],
+                'amount' => $amount,
+                'phone_formatted' => $this->formatPhoneNumber($phoneNumber),
+                'callback_url' => $this->callbackUrl,
+                'payload_debug' => $payload, // Log the entire payload
+            ]);
+            
             $ch = curl_init($url);
-
+            
+            $jsonPayload = json_encode($payload);
+            
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_POSTFIELDS => $jsonPayload,
                 CURLOPT_HTTPHEADER => [
                     'Authorization: Bearer ' . $accessToken,
                     'Content-Type: application/json',
+                    'Accept: application/json',
                 ],
                 CURLOPT_SSL_VERIFYPEER => false,
                 CURLOPT_SSL_VERIFYHOST => false,
                 CURLOPT_TIMEOUT => 30,
             ]);
-
+            
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
-
+            $curlInfo = curl_getinfo($ch);
+            
             curl_close($ch);
-
+            
             $responseData = json_decode($response, true);
-
-            $responseData = json_decode($response, true);
-
-            Log::info('STK RAW RESPONSE', [
+            
+            Log::info('STK Push Response', [
                 'http_code' => $httpCode,
-                'response' => $responseData,
-                'error' => $error,
+                'curl_error' => $error,
+                'response_data' => $responseData,
+                'raw_response' => $response,
+                'curl_info' => $curlInfo,
             ]);
-
+            
             if ($httpCode === 200 && isset($responseData['ResponseCode']) && $responseData['ResponseCode'] === '0') {
                 return [
                     'success' => true,
@@ -176,15 +213,38 @@ class MpesaService
                     'customer_message' => $responseData['CustomerMessage'],
                 ];
             }
-
+            
+            // Detailed error analysis
+            $errorMessage = 'STK Push failed';
+            if (isset($responseData['errorMessage'])) {
+                $errorMessage = $responseData['errorMessage'];
+            } elseif (isset($responseData['ResponseDescription'])) {
+                $errorMessage = $responseData['ResponseDescription'];
+            } elseif ($httpCode !== 200) {
+                $errorMessage = 'HTTP Error: ' . $httpCode;
+            }
+            
+            Log::error('STK Push Failed Analysis', [
+                'error_message' => $errorMessage,
+                'error_code' => $responseData['errorCode'] ?? null,
+                'response_code' => $responseData['ResponseCode'] ?? null,
+                'request_payload' => $payload, // Include for debugging
+                'shortcode_used' => $this->shortcode,
+                'passkey_used' => substr($this->passkey, 0, 10) . '...',
+            ]);
+            
             return [
                 'success' => false,
-                'error' => $responseData['errorMessage']
-                    ?? $responseData['ResponseDescription']
-                    ?? 'STK Push failed',
+                'error' => $errorMessage,
+                'error_code' => $responseData['errorCode'] ?? null,
+                'response_code' => $responseData['ResponseCode'] ?? null,
             ];
+            
         } catch (\Exception $e) {
-            Log::error('STK Push exception', ['error' => $e->getMessage()]);
+            Log::error('STK Push Exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return [
                 'success' => false,
                 'error' => $e->getMessage()
