@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             // LessonSeeder::class,
             // AssessmentSeeder::class,
             // QuestionSeeder::class,
+            PlanSeeder::class,
         ]);
     }
 }

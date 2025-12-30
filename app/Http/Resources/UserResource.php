@@ -18,6 +18,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'role' => $this->role,
             'status' => $this->status,
+            'is_premium' => (bool)$this->is_premium,
         ];
 
         // Conditional loading based on role
