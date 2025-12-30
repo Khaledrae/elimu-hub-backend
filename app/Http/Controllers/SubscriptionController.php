@@ -20,7 +20,6 @@ class SubscriptionController extends Controller
     public function __construct(MpesaService $mpesaService)
     {
         $this->mpesaService = $mpesaService;
-        // $this->middleware('auth:sanctum');
     }
 
     // Get available plans

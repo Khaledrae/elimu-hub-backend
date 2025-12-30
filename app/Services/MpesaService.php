@@ -17,13 +17,13 @@ class MpesaService
 
     public function __construct()
     {
-        $this->consumerKey = config('services.mpesa.consumer_key');
-        $this->consumerSecret = config('services.mpesa.consumer_secret');
-        $this->shortcode = config('services.mpesa.shortcode');
-        $this->passkey = config('services.mpesa.passkey');
-        $this->callbackUrl = config('services.mpesa.callback_url');
-        $this->environment = config('services.mpesa.env', 'sandbox');
-
+         $this->consumerKey = env('MPESA_CONSUMER_KEY');
+        $this->consumerSecret = env('MPESA_CONSUMER_SECRET');
+        $this->shortcode = env('MPESA_SHORTCODE', '174379');
+        $this->passkey = env('MPESA_PASSKEY');
+        $this->callbackUrl = env('MPESA_CALLBACK_URL');
+        $this->environment = env('MPESA_ENV', 'sandbox');
+        
          Log::info('MpesaService initialized', [
             'env' => $this->environment,
             'shortcode' => $this->shortcode,
