@@ -23,6 +23,14 @@ class MpesaService
         $this->passkey = config('services.mpesa.passkey');
         $this->callbackUrl = config('services.mpesa.callback_url');
         $this->environment = config('services.mpesa.env', 'sandbox');
+
+         Log::info('MpesaService initialized', [
+            'env' => $this->environment,
+            'shortcode' => $this->shortcode,
+            'consumer_key_first_5' => substr($this->consumerKey, 0, 5),
+            'consumer_key_length' => strlen($this->consumerKey),
+            'consumer_secret_length' => strlen($this->consumerSecret),
+        ]);
     }
 
     private function getBaseUrl()
@@ -32,49 +40,73 @@ class MpesaService
             ? 'https://api.safaricom.co.ke'
             : 'https://sandbox.safaricom.co.ke';
     }
-
-    private function generateAccessToken()
+  private function generateAccessToken()
     {
-        $url = $this->getBaseUrl()
-            . '/oauth/v1/generate?grant_type=client_credentials';
-
-        $consumerKey = trim(config('mpesa.consumer_key'));
-        $consumerSecret = trim(config('mpesa.consumer_secret'));
+        $url = $this->getBaseUrl() . '/oauth/v1/generate?grant_type=client_credentials';
+        
+        Log::info('Generating MPESA token', [
+            'url' => $url,
+            'consumer_key' => substr($this->consumerKey, 0, 10) . '...',
+        ]);
 
         $ch = curl_init($url);
-
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_USERPWD => $consumerKey . ':' . $consumerSecret,
-            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_TIMEOUT => 30,
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Basic ' . base64_encode($this->consumerKey . ':' . $this->consumerSecret)
         ]);
-
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Important for local testing
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // Important for local testing
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        
+        // For debugging, enable verbose output
+        if (config('app.debug')) {
+            curl_setopt($ch, CURLOPT_VERBOSE, true);
+            $verbose = fopen('php://temp', 'w+');
+            curl_setopt($ch, CURLOPT_STDERR, $verbose);
+        }
+        
         $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if (curl_errno($ch)) {
-            Log::error('MPESA CURL ERROR', [
-                'error' => curl_error($ch),
-            ]);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        
+        if (config('app.debug')) {
+            rewind($verbose);
+            $verboseLog = stream_get_contents($verbose);
+            Log::debug('CURL verbose output', ['log' => $verboseLog]);
         }
-
+        
         curl_close($ch);
-
-        Log::info('MPESA TOKEN CURL RESPONSE', [
-            'status' => $status,
-            'body' => $response,
+        
+        Log::info('MPESA token response', [
+            'http_code' => $httpCode,
+            'response_length' => strlen($response),
+            'error' => $error,
         ]);
-
-        if ($status === 200) {
+        
+        if ($httpCode === 200 && $response) {
             $data = json_decode($response, true);
-            return $data['access_token'];
+            
+            if (isset($data['access_token'])) {
+                Log::info('MPESA token generated successfully', [
+                    'token_length' => strlen($data['access_token']),
+                    'expires_in' => $data['expires_in'] ?? 'unknown'
+                ]);
+                return $data['access_token'];
+            }
         }
-
-        throw new \Exception('Failed to generate access token');
+        
+        Log::error('Failed to generate MPESA access token', [
+            'http_code' => $httpCode,
+            'response' => $response,
+            'error' => $error,
+            'consumer_key' => substr($this->consumerKey, 0, 5) . '...',
+        ]);
+        
+        throw new \Exception('Failed to generate access token. HTTP Code: ' . $httpCode . ' Error: ' . $error);
     }
+
 
 
     private function generateTimestamp()

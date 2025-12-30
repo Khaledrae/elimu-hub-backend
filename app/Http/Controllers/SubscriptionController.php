@@ -193,7 +193,7 @@ class SubscriptionController extends Controller
                     ]);
 
                     // Send notification to user
-                    $user->notify(new SubscriptionActivatedNotification($subscription));
+                    //$user->notify(new SubscriptionActivatedNotification($subscription));
                 }
             });
 
