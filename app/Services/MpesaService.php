@@ -23,14 +23,6 @@ class MpesaService
         $this->passkey = env('MPESA_PASSKEY');
         $this->callbackUrl = env('MPESA_CALLBACK_URL');
         $this->environment = env('MPESA_ENV', 'sandbox');
-        
-         Log::info('MpesaService initialized', [
-            'env' => $this->environment,
-            'shortcode' => $this->shortcode,
-            'consumer_key_first_5' => substr($this->consumerKey, 0, 5),
-            'consumer_key_length' => strlen($this->consumerKey),
-            'consumer_secret_length' => strlen($this->consumerSecret),
-        ]);
     }
 
     private function getBaseUrl()
@@ -129,7 +121,7 @@ class MpesaService
             $passwordData = $this->generatePassword();
 
             $url = $this->getBaseUrl() . '/mpesa/stkpush/v1/processrequest';
-
+            $amount = $this->formatAmount($amount);
             $payload = [
                 'BusinessShortCode' => $this->shortcode,
                 'Password' => $passwordData['password'],
@@ -174,6 +166,51 @@ class MpesaService
             ];
         }
     }
+    /**
+     * Format amount correctly for MPESA
+     * Sandbox: Only accepts 1, 10, 50, 100
+     * Production: Any integer amount
+     */
+    private function formatAmount($amount)
+    {
+        // Convert to integer
+        $amount = intval($amount);
+        
+        // For sandbox, validate amount
+        if ($this->environment === 'sandbox') {
+            $validSandboxAmounts = [1, 10, 50, 100];
+            
+            // If amount is not valid for sandbox, use the closest valid amount
+            if (!in_array($amount, $validSandboxAmounts)) {
+                Log::warning('Sandbox amount adjustment', [
+                    'original_amount' => $amount,
+                    'valid_amounts' => $validSandboxAmounts,
+                ]);
+                
+                // Find the closest valid amount
+                $closest = null;
+                $closestDiff = PHP_INT_MAX;
+                
+                foreach ($validSandboxAmounts as $validAmount) {
+                    $diff = abs($amount - $validAmount);
+                    if ($diff < $closestDiff) {
+                        $closestDiff = $diff;
+                        $closest = $validAmount;
+                    }
+                }
+                
+                $amount = $closest ?? 1; // Default to 1 if no closest found
+                
+                Log::info('Amount adjusted for sandbox', [
+                    'original' => $amount,
+                    'adjusted' => $amount,
+                ]);
+            }
+        }
+        
+        return $amount;
+    }
+
 
     // Check transaction status
     public function checkTransactionStatus($checkoutRequestId)
