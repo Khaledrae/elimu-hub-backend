@@ -17,7 +17,7 @@ class MpesaService
 
     public function __construct()
     {
-         $this->consumerKey = env('MPESA_CONSUMER_KEY');
+        $this->consumerKey = env('MPESA_CONSUMER_KEY');
         $this->consumerSecret = env('MPESA_CONSUMER_SECRET');
         $this->shortcode = env('MPESA_SHORTCODE', '174379');
         $this->passkey = env('MPESA_PASSKEY');
@@ -32,17 +32,17 @@ class MpesaService
             ? 'https://api.safaricom.co.ke'
             : 'https://sandbox.safaricom.co.ke';
     }
-  private function generateAccessToken()
+    private function generateAccessToken()
     {
         $url = $this->getBaseUrl() . '/oauth/v1/generate?grant_type=client_credentials';
-        
+
         Log::info('Generating MPESA token', [
             'url' => $url,
             'consumer_key' => substr($this->consumerKey, 0, 10) . '...',
         ]);
 
         $ch = curl_init($url);
-        
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Authorization: Basic ' . base64_encode($this->consumerKey . ':' . $this->consumerSecret)
         ]);
@@ -51,35 +51,35 @@ class MpesaService
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Important for local testing
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // Important for local testing
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        
+
         // For debugging, enable verbose output
         if (config('app.debug')) {
             curl_setopt($ch, CURLOPT_VERBOSE, true);
             $verbose = fopen('php://temp', 'w+');
             curl_setopt($ch, CURLOPT_STDERR, $verbose);
         }
-        
+
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
-        
+
         if (config('app.debug')) {
             rewind($verbose);
             $verboseLog = stream_get_contents($verbose);
             Log::debug('CURL verbose output', ['log' => $verboseLog]);
         }
-        
+
         curl_close($ch);
-        
+
         Log::info('MPESA token response', [
             'http_code' => $httpCode,
             'response_length' => strlen($response),
             'error' => $error,
         ]);
-        
+
         if ($httpCode === 200 && $response) {
             $data = json_decode($response, true);
-            
+
             if (isset($data['access_token'])) {
                 Log::info('MPESA token generated successfully', [
                     'token_length' => strlen($data['access_token']),
@@ -88,14 +88,14 @@ class MpesaService
                 return $data['access_token'];
             }
         }
-        
+
         Log::error('Failed to generate MPESA access token', [
             'http_code' => $httpCode,
             'response' => $response,
             'error' => $error,
             'consumer_key' => substr($this->consumerKey, 0, 5) . '...',
         ]);
-        
+
         throw new \Exception('Failed to generate access token. HTTP Code: ' . $httpCode . ' Error: ' . $error);
     }
 
@@ -136,10 +136,34 @@ class MpesaService
                 'TransactionDesc' => $transactionDesc,
             ];
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-                'Content-Type' => 'application/json',
-            ])->post($url, $payload);
+            $ch = curl_init($url);
+
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $accessToken,
+                    'Content-Type: application/json',
+                ],
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_TIMEOUT => 30,
+            ]);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+
+            curl_close($ch);
+
+            $responseData = json_decode($response, true);
+
+            Log::info('STK RAW RESPONSE', [
+                'http_code' => $httpCode,
+                'response' => $responseData,
+                'error' => $error,
+            ]);
 
             $responseData = $response->json();
 
@@ -175,22 +199,22 @@ class MpesaService
     {
         // Convert to integer
         $amount = intval($amount);
-        
+
         // For sandbox, validate amount
         if ($this->environment === 'sandbox') {
             $validSandboxAmounts = [1, 10, 50, 100];
-            
+
             // If amount is not valid for sandbox, use the closest valid amount
             if (!in_array($amount, $validSandboxAmounts)) {
                 Log::warning('Sandbox amount adjustment', [
                     'original_amount' => $amount,
                     'valid_amounts' => $validSandboxAmounts,
                 ]);
-                
+
                 // Find the closest valid amount
                 $closest = null;
                 $closestDiff = PHP_INT_MAX;
-                
+
                 foreach ($validSandboxAmounts as $validAmount) {
                     $diff = abs($amount - $validAmount);
                     if ($diff < $closestDiff) {
@@ -198,16 +222,16 @@ class MpesaService
                         $closest = $validAmount;
                     }
                 }
-                
+
                 $amount = $closest ?? 1; // Default to 1 if no closest found
-                
+
                 Log::info('Amount adjusted for sandbox', [
                     'original' => $amount,
                     'adjusted' => $amount,
                 ]);
             }
         }
-        
+
         return $amount;
     }
 
