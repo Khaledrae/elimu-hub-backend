@@ -35,28 +35,47 @@ class MpesaService
 
     private function generateAccessToken()
     {
-        $url = $this->getBaseUrl() . '/oauth/v1/generate?grant_type=client_credentials';
+        $url = $this->getBaseUrl()
+            . '/oauth/v1/generate?grant_type=client_credentials';
 
-        // The Daraja API expects Basic Auth with base64 encoded credentials
-        $credentials = base64_encode($this->consumerKey . ':' . $this->consumerSecret);
-        
-       $response = Http::withHeaders([
-            'Authorization' => 'Basic ' . $credentials,
-            'Content-Type' => 'application/json',
-        ])->get($url);
-        
-        if ($response->successful()) {
-            $data = $response->json();
+        $consumerKey = trim(config('mpesa.consumer_key'));
+        $consumerSecret = trim(config('mpesa.consumer_secret'));
+
+        $ch = curl_init($url);
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_USERPWD => $consumerKey . ':' . $consumerSecret,
+            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+            Log::error('MPESA CURL ERROR', [
+                'error' => curl_error($ch),
+            ]);
+        }
+
+        curl_close($ch);
+
+        Log::info('MPESA TOKEN CURL RESPONSE', [
+            'status' => $status,
+            'body' => $response,
+        ]);
+
+        if ($status === 200) {
+            $data = json_decode($response, true);
             return $data['access_token'];
         }
 
-        Log::error('MPESA TOKEN RAW RESPONSE', [
-            'status' => $response->status(),
-            'body'   => $response->body(),
-            'headers' => $response->headers(),
-        ]);
         throw new \Exception('Failed to generate access token');
     }
+
 
     private function generateTimestamp()
     {
