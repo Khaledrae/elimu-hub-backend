@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\AssessmentController;
@@ -64,6 +65,13 @@ Route::middleware('auth:api')->group(function () {
         Route::get('progress/{course}/{student}', [CoveredLessonController::class, 'progress']);
         Route::get('recent-lessons', [CoveredLessonController::class, 'recentLessons']);
     });
+    Route::prefix('subscription')->group(function () {
+        Route::get('/plans', [SubscriptionController::class, 'getPlans']);
+        Route::post('/initiate-payment', [SubscriptionController::class, 'initiatePayment']);
+        Route::get('/check-status/{checkoutRequestId}', [SubscriptionController::class, 'checkPaymentStatus']);
+        Route::get('/details', [SubscriptionController::class, 'getSubscriptionDetails']);
+        Route::post('/cancel', [SubscriptionController::class, 'cancelSubscription']);
+    });
     Route::apiResource('classes', ClassModelController::class)->only(['index', 'show']);
     Route::apiResource('courses', CourseController::class)->only(['index', 'show']);
     Route::apiResource('lessons', LessonController::class)->only(['index', 'show']);
@@ -95,3 +103,4 @@ Route::middleware('auth:api')->group(function () {
     Route::get('assessments/{assessment}/attempts', [StudentResponseController::class, 'getAttempts']);
     Route::get('assessments/{assessment}/attempts/{attempt}/results', [StudentResponseController::class, 'results']);
 });
+Route::post('/mpesa/callback', [SubscriptionController::class, 'mpesaCallback']);

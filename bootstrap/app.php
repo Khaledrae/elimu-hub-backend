@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsurePremiumUser;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'admin.role' => \App\Http\Middleware\CheckAdminRole::class,
+            'premium' => EnsurePremiumUser::class,
+
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
