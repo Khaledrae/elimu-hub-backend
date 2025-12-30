@@ -52,6 +52,8 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/covered-lessons/start', [CoveredLessonController::class, 'startLesson']);
         Route::post('/covered-lessons/{lesson}/complete', [CoveredLessonController::class, 'completeLesson']);
         Route::get('/last-lesson', [CoveredLessonController::class, 'lastLesson']);
+        Route::get('/recent-lesson', [CoveredLessonController::class, 'recentLesson']);
+        Route::get('/course-recent-lessons/{course}', [CoveredLessonController::class, 'courseRecentLessons']);
         Route::get('/overall-progress', [CoveredLessonController::class, 'overallProgress']);
     });
 
@@ -68,11 +70,17 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('classes', ClassModelController::class)->only(['index', 'show']);
     Route::apiResource('assessments', AssessmentController::class);
     Route::apiResource('questions', QuestionController::class);
-   // Route::apiResource('users', UsersController::class)->only(['show', 'index']);
+    // Route::apiResource('users', UsersController::class)->only(['show', 'index']);
     Route::get('courses/{id}/classes', [CourseController::class, 'classes']);
     Route::get('courses/{id}/assessments', [CourseController::class, 'assessments']);
     Route::get('users', [UsersController::class, 'index']);
     Route::get('users/{user}', [UsersController::class, 'show']);
+    Route::get('assessments/course/{course}', [AssessmentController::class, 'byCourse']);
+    Route::get('students/{student}/recent-activities', [CoveredLessonController::class, 'recentActivities']);
+    Route::get('students/{student}/pending-assessments', [CoveredLessonController::class, 'pendingAssessments']);
+    Route::get('courses/{course}/classes', [CourseController::class, 'getClasses']);
+    Route::get('lessons/course/{course}', [LessonController::class, 'byCourse']);
+    Route::get('lessons/course/{course}/class/{class}', [LessonController::class, 'byCourseAndClass']);
     Route::get('courses/{id}/lessons', [LessonController::class, 'byCourse']);
     Route::get('classes/{id}/courses', [ClassModelController::class, 'courses']);
     Route::get('classes/{id}/lessons', [ClassModelController::class, 'getLessons']);

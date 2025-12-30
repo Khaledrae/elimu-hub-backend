@@ -20,13 +20,13 @@ class AssessmentController extends Controller
         $assessment = Assessment::with(['lesson', 'teacher.user', 'questions'])
             ->where('lesson_id', $lessonId)
             ->first();
-        
+
         if (!$assessment) {
             return response()->json([
                 'message' => 'No assessment found for this lesson'
             ], 404);
         }
-        
+
         return response()->json($assessment);
     }
     public function store(Request $request)
@@ -69,5 +69,19 @@ class AssessmentController extends Controller
     {
         Assessment::findOrFail($id)->delete();
         return response()->json(['message' => 'Assessment deleted successfully']);
+    }
+    // Add this method to your existing AssessmentController
+
+    public function byCourse($courseId)
+    {
+        $assessments = Assessment::whereIn('lesson_id', function ($query) use ($courseId) {
+            $query->select('id')
+                ->from('lessons')
+                ->where('course_id', $courseId);
+        })
+            ->with(['lesson', 'questions'])
+            ->get();
+
+        return response()->json($assessments);
     }
 }

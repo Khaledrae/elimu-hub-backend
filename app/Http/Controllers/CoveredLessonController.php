@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Assessment;
 use App\Models\CoveredLesson;
 use App\Models\Lesson;
 use App\Models\User;
@@ -170,6 +171,43 @@ class CoveredLessonController extends Controller
     }
 
     // Get last lesson for student
+    public function recentLesson($studentId)
+    {
+        $lastLesson = CoveredLesson::with(['lesson', 'course'])
+            ->where('student_id', $studentId)
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        if (!$lastLesson) {
+            return response()->json([
+                'message' => 'No lessons started yet',
+                'data' => null
+            ]);
+        }
+
+        return response()->json([
+            'data' => $lastLesson
+        ]);
+    }
+    public function courseRecentLessons($studentId, $courseId)
+    {
+        $lastLesson = CoveredLesson::with(['lesson', 'course'])
+            ->where('student_id', $studentId)
+            ->where('course_id', $courseId)
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        if (!$lastLesson) {
+            return response()->json([
+                'message' => 'No lessons started yet',
+                'data' => null
+            ]);
+        }
+
+        return response()->json([
+            'data' => $lastLesson
+        ]);
+    }
     public function lastLesson($studentId)
     {
         $lastLesson = CoveredLesson::with(['lesson', 'course'])
@@ -334,6 +372,13 @@ class CoveredLessonController extends Controller
             ? Lesson::where('class_id', $student->grade_level)->count()
             : Lesson::count();
 
+         // Get total courses for student's class
+        $totalCourses = $student->grade_level
+            ? Course::whereHas('lessons', function($query) use ($student) {
+                $query->where('class_id', $student->grade_level);
+              })->count()
+            : Course::count();
+
         // Course breakdown
         $courseBreakdown = [];
         $groupedByCourse = $coveredLessons->groupBy('course_id');
@@ -379,6 +424,7 @@ class CoveredLessonController extends Controller
                 'class' => $student->class?->only(['id', 'name']),
             ],
             'total_lessons' => $totalLessons,
+            'total_courses' => $totalCourses,
             'covered_lessons' => $progress['total_covered'],
             'completed' => $progress['completed'],
             'in_progress' => $progress['in_progress'],
@@ -392,6 +438,96 @@ class CoveredLessonController extends Controller
         ]);
     }
 
+
+    // Get recent activities for a student
+    public function recentActivities(Request $request, $studentId)
+    {
+        $limit = $request->query('limit', 10);
+        
+        $student = Student::where('user_id', $studentId)->first();
+        
+        if (!$student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+
+        $coveredLessons = CoveredLesson::with(['lesson', 'course'])
+            ->where('student_id', $student->id)
+            ->orderBy('updated_at', 'desc')
+            ->limit($limit)
+            ->get();
+
+        $activities = $coveredLessons->map(function($covered) {
+            $type = 'lesson_started';
+            $description = "Started learning";
+            
+            if ($covered->status === 'completed') {
+                $type = 'lesson_completed';
+                $description = "Completed with score: {$covered->score}%";
+            } elseif ($covered->status === 'failed') {
+                $type = 'lesson_failed';
+                $description = "Attempted but didn't pass (Score: {$covered->score}%)";
+            } elseif ($covered->status === 'in-progress') {
+                $type = 'lesson_started';
+                $description = "Currently learning";
+            }
+
+            return [
+                'id' => $covered->id,
+                'type' => $type,
+                'title' => $covered->lesson?->title ?? 'Lesson',
+                'description' => $description,
+                'date' => $covered->updated_at->toISOString(),
+                'course_name' => $covered->course?->title ?? 'Course',
+                'score' => $covered->score,
+                'status' => $covered->status,
+            ];
+        });
+
+        return response()->json($activities);
+    }
+
+    // Get pending assessments for a student
+    public function pendingAssessments($studentId)
+    {
+        $student = Student::where('user_id', $studentId)->first();
+        
+        if (!$student) {
+            return response()->json(['error' => 'Student not found'], 404);
+        }
+
+        // Get lessons that are in-progress
+        $inProgressLessons = CoveredLesson::where('student_id', $student->id)
+            ->where('status', 'in-progress')
+            ->pluck('lesson_id');
+
+        // Get assessments for these lessons
+        $pendingAssessments = Assessment::with(['lesson.course'])
+            ->whereIn('lesson_id', $inProgressLessons)
+            ->where('status', 'published')
+            ->get()
+            ->map(function($assessment) {
+                return [
+                    'id' => $assessment->id,
+                    'title' => $assessment->title,
+                    'type' => $assessment->type,
+                    'total_marks' => $assessment->total_marks,
+                    'duration_minutes' => $assessment->duration_minutes,
+                    'lesson' => [
+                        'id' => $assessment->lesson->id,
+                        'title' => $assessment->lesson->title,
+                    ],
+                    'course' => [
+                        'id' => $assessment->lesson->course->id,
+                        'title' => $assessment->lesson->course->title,
+                    ],
+                ];
+            });
+
+        return response()->json([
+            'count' => $pendingAssessments->count(),
+            'assessments' => $pendingAssessments,
+        ]);
+    }
     // Calculate learning streak
     private function calculateLearningStreak($studentId): int
     {
