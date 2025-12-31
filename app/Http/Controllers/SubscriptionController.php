@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Subscription;
 use App\Models\MpesaTransaction;
 use App\Models\Plan;
+use App\Notifications\SubscriptionActivated;
 use App\Services\MpesaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -152,7 +153,7 @@ class SubscriptionController extends Controller
                 }
             }
 
-            DB::transaction(function () use ($transaction, $mpesaReceipt, $resultDesc, $amount) {
+            DB::transaction(function () use ($transaction, $mpesaReceipt, $resultDesc, $amount,   $callbackData) {
                 // Update transaction
                 $transaction->update([
                     'mpesa_receipt_number' => $mpesaReceipt,
@@ -191,7 +192,7 @@ class SubscriptionController extends Controller
                     ]);
 
                     // Send notification to user
-                    //$user->notify(new SubscriptionActivatedNotification($subscription));
+                    $subscription->user->notify(new SubscriptionActivated($subscription));
                 }
             });
 
