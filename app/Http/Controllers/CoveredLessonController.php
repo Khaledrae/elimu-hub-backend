@@ -496,7 +496,7 @@ class CoveredLessonController extends Controller
         }
 
         // Get lessons that are in-progress
-        $inProgressLessons = CoveredLesson::where('student_id', $student->id)
+        $inProgressLessons = CoveredLesson::where('student_id', $student->user_id)
             ->where('status', 'in-progress')
             ->pluck('lesson_id');
 
