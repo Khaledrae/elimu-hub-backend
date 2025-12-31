@@ -157,7 +157,7 @@ class SubscriptionController extends Controller
                 // Update transaction
                 $transaction->update([
                     'mpesa_receipt_number' => $mpesaReceipt,
-                    'status' => 'completed',
+                    'status' => 'success',
                     'result_description' => $resultDesc,
                     'response_data' => array_merge($transaction->response_data ?? [], ['callback_data' => $callbackData]),
                 ]);
@@ -184,11 +184,11 @@ class SubscriptionController extends Controller
 
                     // Update user subscription status
                     $user->update([
-                        'subscription_status' => 'premium',
-                        'subscription_expires_at' => $endDate,
-                        'mpesa_phone' => $transaction->phone_number,
-                        'daily_lesson_limit' => 999, // Unlimited for premium
-                        'can_access_all_classes' => true,
+                        // 'subscription_status' => 'premium',
+                        // 'subscription_expires_at' => $endDate,
+                        // 'mpesa_phone' => $transaction->phone_number,
+                        // 'daily_lesson_limit' => 999, // Unlimited for premium
+                        'is_premium' => true,
                     ]);
 
                     // Send notification to user
