@@ -152,7 +152,7 @@ class SubscriptionController extends Controller
                 }
             }
 
-            DB::transaction(function () use ($transaction, $mpesaReceipt, $resultDesc, $amount) {
+            DB::transaction(function () use ($transaction, $mpesaReceipt, $resultDesc, $amount,   $callbackData) {
                 // Update transaction
                 $transaction->update([
                     'mpesa_receipt_number' => $mpesaReceipt,
