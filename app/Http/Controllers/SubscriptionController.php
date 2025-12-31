@@ -83,7 +83,7 @@ class SubscriptionController extends Controller
         // Create pending subscription
         $subscription = Subscription::create([
             'user_id' => $user->id,
-            'plan' => $validated['plan'],
+            'plan_id' => $validated['plan_id'],
             'amount' => $amount,
             'status' => 'pending',
             'start_date' => Carbon::now(),
