@@ -104,3 +104,4 @@ Route::middleware('auth:api')->group(function () {
     Route::get('assessments/{assessment}/attempts/{attempt}/results', [StudentResponseController::class, 'results']);
 });
 Route::post('/mpesa/callback', [SubscriptionController::class, 'mpesaCallback']);
+Route::post('/available-classes', [ClassModelController::class, 'listClasses']);

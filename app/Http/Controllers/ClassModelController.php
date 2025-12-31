@@ -14,6 +14,11 @@ class ClassModelController extends Controller
         $classes = ClassModel::with(['manager', 'courses', 'students', 'lessons'])->get();
         return ClassModelResource::collection($classes);
     }
+    public function listClasses()
+    {
+        $classes = ClassModel::with(['manager', 'courses', 'students', 'lessons'])->get();
+        return ClassModelResource::collection($classes);
+    }
 
     public function store(Request $request)
     {
