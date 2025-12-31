@@ -168,12 +168,11 @@ class SubscriptionController extends Controller
 
                     // Calculate end date based on plan
                     $endDate = null;
-                    if ($subscription->plan == 'monthly') {
-                        $endDate = Carbon::now()->addDays(30);
-                    } elseif ($subscription->plan == 'yearly') {
-                        $endDate = Carbon::now()->addDays(365);
-                    } elseif ($subscription->plan == 'lifetime') {
-                        $endDate = null; // Lifetime
+                    $plan = Plan::find($subscription->plan_id);
+
+                    $endDate = null;
+                    if ($plan && $plan->duration_days) {
+                        $endDate = Carbon::now()->addDays($plan->duration_days);
                     }
 
                     $subscription->update([
