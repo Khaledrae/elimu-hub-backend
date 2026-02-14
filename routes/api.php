@@ -89,6 +89,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('courses/{course}/classes', [CourseController::class, 'getClasses']);
     Route::get('lessons/course/{course}', [LessonController::class, 'byCourse']);
     Route::get('lessons/course/{course}/class/{class}', [LessonController::class, 'byCourseAndClass']);
+    Route::get('lessons/{id}/next', [LessonController::class, 'getNextLesson']);
+    Route::get('lessons/order-options/{courseId}/{classId}', [LessonController::class, 'getOrderOptions']);
     Route::get('courses/{id}/lessons', [LessonController::class, 'byCourse']);
     Route::get('classes/{id}/courses', [ClassModelController::class, 'courses']);
     Route::get('classes/{id}/lessons', [ClassModelController::class, 'getLessons']);
