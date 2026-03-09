@@ -2,11 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CoveredLesson;
 use App\Models\Lesson;
+use App\Services\CoveredLessonService;
 use Illuminate\Http\Request;
 
 class LessonController extends Controller
 {
+    protected CoveredLessonService $coveredLessonService;
+
+    public function __construct(CoveredLessonService $coveredLessonService)
+    {
+        $this->coveredLessonService = $coveredLessonService;
+    }
+
     public function index()
     {
         return response()->json(
@@ -14,33 +23,6 @@ class LessonController extends Controller
         );
     }
 
-    // public function store(Request $request)
-    // {
-    //     $data = $request->validate([
-    //         'course_id' => 'required|exists:courses,id',
-    //         'class_id' => 'nullable|exists:classes,id',
-    //         'teacher_id' => 'nullable|exists:teachers,user_id',
-    //         'title' => 'required|string|max:255',
-    //         'content_type' => 'required|in:text,video,document',
-    //         'content' => 'nullable|string',
-    //         'description' => 'nullable|string',
-    //         'video_url' => 'nullable|string',
-    //         'document_path' => 'nullable|string',
-    //         'order' => 'nullable|integer',
-    //         'status' => 'nullable|in:draft,published',
-    //     ]);
-    //     // If order is not provided, set it to the next available order
-    //     if (!isset($data['order'])) {
-    //         $maxOrder = Lesson::where('course_id', $data['course_id'])
-    //             ->where('class_id', $data['class_id'])
-    //             ->max('order');
-    //         $data['order'] = $maxOrder ? $maxOrder + 1 : 1;
-    //     }
-
-    //     $lesson = Lesson::create($data);
-
-    //     return response()->json($lesson->load(['course', 'class', 'teacher']), 201);
-    // }
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -183,9 +165,46 @@ class LessonController extends Controller
 
     public function show($id)
     {
-        return response()->json(
-            Lesson::with(['course', 'class', 'teacher'])->findOrFail($id)
-        );
+        $lesson = Lesson::with(['course', 'class', 'teacher'])->findOrFail($id);
+
+        $user = auth()->user();
+
+        if (!$user->is_premium) {
+
+            $limit = config('learning.free_daily_lesson_limit');
+
+            $todayCount = $this->coveredLessonService->getTodaysCount($user->id);
+
+            $alreadyStarted = CoveredLesson::where('student_id', $user->id)
+                ->where('lesson_id', $lesson->id)
+                ->exists();
+
+            if ($todayCount >= $limit && !$alreadyStarted) {
+                return response()->json([
+                    'message' => 'Daily lesson limit reached',
+                    'limit' => $limit
+                ], 403);
+            }
+        }
+        $nextLesson = Lesson::where('course_id', $lesson->course_id)
+            ->where('class_id', $lesson->class_id)
+            ->where('order', '>', $lesson->order)
+            ->where('status', 'published')
+            ->orderBy('order')
+            ->first();
+
+        $previousLesson = Lesson::where('course_id', $lesson->course_id)
+            ->where('class_id', $lesson->class_id)
+            ->where('order', '<', $lesson->order)
+            ->where('status', 'published')
+            ->orderByDesc('order')
+            ->first();
+
+        return response()->json([
+            'lesson' => $lesson,
+            'next_lesson' => $nextLesson,
+            'previous_lesson' => $previousLesson
+        ]);
     }
 
     // public function update(Request $request, $id)

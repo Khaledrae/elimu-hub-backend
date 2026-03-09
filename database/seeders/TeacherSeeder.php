@@ -11,13 +11,13 @@ class TeacherSeeder extends Seeder
 {
     public function run()
     {
-        $courseTitles = [
-            'Mathematics', 'English', 'Kiswahili', 'Science & Technology',
-            'Social Studies', 'CRE', 'Music', 'Art & Craft', 'Physical Education',
-            'Agriculture', 'Home Science',
-            'Integrated Science', 'Pre-Technical Studies', 'Business Studies',
-            'Computer Science', 'Life Skills', 'Visual Arts',
-            'Performing Arts', 'Religious Education'
+        $courseTitles = ['Environmental Activities',
+            // 'Mathematics', 'English', 'Kiswahili', 'Science & Technology',
+            // 'Social Studies', 'CRE', 'Music', 'Creative Arts', 'Physical Education',
+            // 'Agriculture', 'Home Science',
+            // 'Integrated Science', 'Pre-Technical Studies', 'Business Studies',
+            // 'Computer Science', 'Life Skills', 'Visual Arts',
+            // 'Performing Arts', 'Religious Education'
         ];
 
         foreach ($courseTitles as $title) {

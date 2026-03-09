@@ -44,14 +44,16 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::patch('users/{id}/status', [UsersController::class, 'updateStatus']);
     Route::get('students/statistics/summary', [StudentController::class, 'statistics']);
     Route::post('classes/{id}/assign-courses', [ClassModelController::class, 'assignCourses']);
-    Route::get('/teachers/available-managers', [TeacherController::class, 'availableManagers']);
 });
 Route::middleware('auth:api')->group(function () {
-
+    Route::post('/covered-lessons/start', [CoveredLessonController::class, 'startLesson']);
+    Route::post('/covered-lessons/{lesson}/complete', [CoveredLessonController::class, 'completeLesson']);
+    //Route::get('/covered-lessons', [CoveredLessonController::class, 'index']);
     Route::prefix('students/{student}')->group(function () {
         Route::get('/covered-lessons', [CoveredLessonController::class, 'index']);
-        Route::post('/covered-lessons/start', [CoveredLessonController::class, 'startLesson']);
-        Route::post('/covered-lessons/{lesson}/complete', [CoveredLessonController::class, 'completeLesson']);
+        Route::get('/covered-lessons/todays-count', [CoveredLessonController::class, 'todaysCount']);
+        // Route::post('/covered-lessons/start', [CoveredLessonController::class, 'startLesson']);
+        // Route::post('/covered-lessons/{lesson}/complete', [CoveredLessonController::class, 'completeLesson']);
         Route::get('/last-lesson', [CoveredLessonController::class, 'lastLesson']);
         Route::get('/recent-lesson', [CoveredLessonController::class, 'recentLesson']);
         Route::get('/course-recent-lessons/{course}', [CoveredLessonController::class, 'courseRecentLessons']);
@@ -92,7 +94,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('lessons/{id}/next', [LessonController::class, 'getNextLesson']);
     Route::get('lessons/order-options/{courseId}/{classId}', [LessonController::class, 'getOrderOptions']);
     Route::get('courses/{id}/lessons', [LessonController::class, 'byCourse']);
-    Route::get('classes/{id}/courses', [ClassModelController::class, 'courses']);
+    Route::get('classes/{id}/courses', [ClassModelController::class, 'classCourses']);
     Route::get('classes/{id}/lessons', [ClassModelController::class, 'getLessons']);
     Route::get('students/performance', [StudentPerformanceController::class, 'summary']);
     Route::post('assessments/{assessmentId}/submit', [StudentResponseController::class, 'submit']);
@@ -107,3 +109,4 @@ Route::middleware('auth:api')->group(function () {
 });
 Route::post('/mpesa/callback', [SubscriptionController::class, 'mpesaCallback']);
 Route::get('/available-classes', [ClassModelController::class, 'listClasses']);
+Route::get('/teachers/available-managers', [TeacherController::class, 'availableManagers']);

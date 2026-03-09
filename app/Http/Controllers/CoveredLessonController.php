@@ -12,6 +12,7 @@ use App\Models\Student;
 use App\Services\CoveredLessonService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CoveredLessonController extends Controller
 {
@@ -65,40 +66,24 @@ class CoveredLessonController extends Controller
         return response()->json($query->paginate($perPage));
     }
 
-    // Start a lesson (mark as in-progress)
-    // public function startLesson(Request $request, $studentId)
-    // {
-    //     $validated = $request->validate([
-    //         'lesson_id' => 'required|exists:lessons,id',
-    //         'course_id' => 'sometimes|exists:courses,id',
-    //         'class_id' => 'sometimes|exists:classes,id',
-    //     ]);
-
-    //     // Get lesson to get course_id if not provided
-    //     $lesson = Lesson::findOrFail($validated['lesson_id']);
-
-    //     $coveredLesson = CoveredLesson::updateOrCreate(
-    //         [
-    //             'student_id' => $studentId,
-    //             'lesson_id' => $validated['lesson_id'],
-    //         ],
-    //         [
-    //             'course_id' => $validated['course_id'] ?? $lesson->course_id,
-    //             'class_id' => $validated['class_id'] ?? null,
-    //             'status' => 'in-progress',
-    //             'started_at' => now(),
-    //             'attempts' => DB::raw('attempts + 1'),
-    //         ]
-    //     );
-
-    //     return response()->json([
-    //         'message' => 'Lesson started',
-    //         'data' => $coveredLesson->load('lesson')
-    //     ], 201);
-    // }
-
-    public function startLesson(Request $request, $studentId)
+    public function startLesson(Request $request)
     {
+        $user = auth()->user();
+
+        $studentId = $user->id;
+        if (!$user->is_premium) {
+
+            $limit = config('learning.free_daily_lesson_limit');
+
+            $todayCount = $this->coveredLessonService->getTodaysCount($studentId);
+            if ($todayCount >= $limit) {
+                return response()->json([
+                    'message' => 'Daily lesson limit reached',
+                    'limit' => $limit
+                ], 403);
+            }
+        }
+
         $validated = $request->validate([
             'lesson_id' => 'required|exists:lessons,id',
         ]);
@@ -171,6 +156,13 @@ class CoveredLessonController extends Controller
     }
 
     // Get last lesson for student
+    public function todaysCount($studentId)
+    {
+        $todayCount = $this->coveredLessonService->getTodaysCount($studentId);
+        return response()->json([
+            'today_count' => $todayCount,
+        ]);
+    }
     public function recentLesson($studentId)
     {
         $lastLesson = CoveredLesson::with(['lesson', 'course'])
@@ -372,11 +364,11 @@ class CoveredLessonController extends Controller
             ? Lesson::where('class_id', $student->grade_level)->count()
             : Lesson::count();
 
-         // Get total courses for student's class
+        // Get total courses for student's class
         $totalCourses = $student->grade_level
-            ? Course::whereHas('lessons', function($query) use ($student) {
+            ? Course::whereHas('lessons', function ($query) use ($student) {
                 $query->where('class_id', $student->grade_level);
-              })->count()
+            })->count()
             : Course::count();
 
         // Course breakdown
@@ -443,9 +435,9 @@ class CoveredLessonController extends Controller
     public function recentActivities(Request $request, $studentId)
     {
         $limit = $request->query('limit', 10);
-        
+
         $student = Student::where('user_id', $studentId)->first();
-        
+
         if (!$student) {
             return response()->json(['error' => 'Student not found'], 404);
         }
@@ -456,10 +448,10 @@ class CoveredLessonController extends Controller
             ->limit($limit)
             ->get();
 
-        $activities = $coveredLessons->map(function($covered) {
+        $activities = $coveredLessons->map(function ($covered) {
             $type = 'lesson_started';
             $description = "Started learning";
-            
+
             if ($covered->status === 'completed') {
                 $type = 'lesson_completed';
                 $description = "Completed with score: {$covered->score}%";
@@ -490,7 +482,7 @@ class CoveredLessonController extends Controller
     public function pendingAssessments($studentId)
     {
         $student = Student::where('user_id', $studentId)->first();
-        
+
         if (!$student) {
             return response()->json(['error' => 'Student not found'], 404);
         }
@@ -505,7 +497,7 @@ class CoveredLessonController extends Controller
             ->whereIn('lesson_id', $inProgressLessons)
             ->where('status', 'published')
             ->get()
-            ->map(function($assessment) {
+            ->map(function ($assessment) {
                 return [
                     'id' => $assessment->id,
                     'title' => $assessment->title,

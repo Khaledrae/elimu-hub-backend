@@ -21,14 +21,21 @@ class DatabaseSeeder extends Seeder
             // AdminSeeder::class,
             // ClassModelSeeder::class,
             // StudentSeeder::class,
-            // TeacherSeeder::class,
             // CourseSeeder::class,
+            // TeacherSeeder::class,
             // PlanSeeder::class,
             //LessonSeeder::class,
             // AssessmentSeeder::class,
             // QuestionSeeder::class,
+            //Grade2EnglishSeeder::class,
             // Grade1EnglishSeeder::class,
-            Grade2EnglishSeeder::class,
+            //Grade1CreativeArtsSeeder::class,
+            //Grade1MovementPhysicalActivitiesSeeder::class,
+            //Grade1KiswahiliSeeder::class,
+            // Grade1EnvironmentalActivitiesSeeder::class,
+            // Grade1ReligiousEducationSeeder::class,
+            // Grade1MathematicsSeeder::class,
+            
         ]);
     }
 }

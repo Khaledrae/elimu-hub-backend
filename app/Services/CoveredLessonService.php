@@ -39,7 +39,7 @@ class CoveredLessonService
         if ($coveredLesson) {
             // Update existing
             $coveredLesson->update([
-                'status' => 'in-progress',
+                //'status' => 'in-progress',
                 'started_at' => now(),
                 'attempts' => $coveredLesson->attempts + 1,
             ]);
@@ -96,5 +96,12 @@ class CoveredLessonService
             ->where('student_id', $studentId)
             ->orderByDesc('updated_at')
             ->first();
+    }
+    public function getTodaysCount($studentId)
+    {
+        return CoveredLesson::where('student_id', $studentId)
+                ->whereDate('started_at', now())
+                ->distinct('lesson_id')
+                ->count('lesson_id');
     }
 }
