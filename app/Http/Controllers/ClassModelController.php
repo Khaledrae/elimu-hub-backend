@@ -107,6 +107,38 @@ class ClassModelController extends Controller
             }),
         ]);
     }
+    public function classCourses($id)
+    {
+        $class = ClassModel::with(['courses.teacher.user', 'courses' => function ($q) {
+            $q->withCount('lessons');
+        }])->findOrFail($id);
+
+        return response()->json([
+            'class' => [
+                'id' => $class->id,
+                'name' => $class->name,
+                'level_group' => $class->level_group,
+            ],
+            'courses' => $class->courses->map(function ($course) use ($class) {
+                $teacher = optional($course->teacher);
+                $user = optional($teacher->user);
+
+                $teacherName = $user->first_name && $user->last_name
+                    ? $user->first_name . ' ' . $user->last_name
+                    : null;
+
+                return [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'slug' => $course->slug,
+                    'level' => $course->level,
+                    'teacher' => $teacherName,
+                    'status' => $course->status,
+                    'lessons_count' => $course->lessonsForClass($class->id)->count(),
+                ];
+            }),
+        ]);
+    }
     public function getLessons($id)
     {
         $class = ClassModel::with(['lessons.course', 'lessons.teacher.user'])->findOrFail($id);

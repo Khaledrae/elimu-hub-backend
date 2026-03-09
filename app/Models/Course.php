@@ -36,7 +36,10 @@ class Course extends Model
     {
         return $this->hasMany(Lesson::class);
     }
-
+    public function lessonsForClass($classId)
+    {
+        return $this->hasMany(Lesson::class)->where('class_id', $classId);
+    }
     public function assessments()
     {
         return $this->hasMany(Assessment::class);

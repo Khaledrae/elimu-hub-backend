@@ -158,13 +158,14 @@ class StudentResponseController extends Controller
 
 
 
-    public function results($assessmentId)
+    public function results($assessmentId, $attemptId)
     {
         $studentId = Auth::user()->student->id;
 
         $responses = StudentResponse::with('question')
             ->where('student_id', $studentId)
             ->where('assessment_id', $assessmentId)
+            ->where('attempt_id', $attemptId)
             ->get();
 
         $totalMarks = $responses->sum('marks_awarded');
@@ -172,6 +173,7 @@ class StudentResponseController extends Controller
 
         return response()->json([
             'assessment_id' => $assessmentId,
+            'attempt_id' => $attemptId,
             'total_marks' => $totalMarks,
             'possible_marks' => $possibleMarks,
             'score_percentage' => round(($totalMarks / max($possibleMarks, 1)) * 100, 2),
