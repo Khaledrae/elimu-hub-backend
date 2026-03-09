@@ -29,12 +29,12 @@ class DatabaseSeeder extends Seeder
             // QuestionSeeder::class,
             //Grade2EnglishSeeder::class,
             // Grade1EnglishSeeder::class,
-            //Grade1CreativeArtsSeeder::class,
-            //Grade1MovementPhysicalActivitiesSeeder::class,
-            //Grade1KiswahiliSeeder::class,
-            // Grade1EnvironmentalActivitiesSeeder::class,
-            // Grade1ReligiousEducationSeeder::class,
-            // Grade1MathematicsSeeder::class,
+            Grade1CreativeArtsSeeder::class,
+            Grade1MovementPhysicalActivitiesSeeder::class,
+            Grade1KiswahiliSeeder::class,
+            Grade1EnvironmentalActivitiesSeeder::class,
+            Grade1ReligiousEducationSeeder::class,
+            Grade1MathematicsSeeder::class,
             
         ]);
     }
